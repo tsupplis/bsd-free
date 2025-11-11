@@ -69,7 +69,7 @@
 #include <OS.h>
 #endif
 
-#define VERSION "1.0.1"
+#define VERSION "1.0.2"
 
 #define KILOBYTE 1024
 #define MEGABYTE (1024 * 1024)
@@ -740,12 +740,23 @@ int retrieve_mem_stats(mem_stats_t *stats) {
     knp = kstat_data_lookup(ksp, "pp_kernel");
     if (knp) pp_kernel = knp->value.ul;
     
+    /*
+     * Get ZFS ARC statistics if available
+     * The ARC (Adaptive Replacement Cache) is ZFS's main cache
+     * and can consume a large portion of available memory
+     */
+    uint64_t arc_size = 0;
+    ksp = kstat_lookup(kc, "zfs", 0, "arcstats");
+    if (ksp != NULL && kstat_read(kc, ksp, NULL) != -1) {
+        knp = kstat_data_lookup(ksp, "size");
+        if (knp) arc_size = knp->value.ui64;
+    }
+    
     kstat_close(kc);
     
     /*
      * Calculate memory statistics
-     * Note: On illumos, ZFS ARC can use a lot of memory as cache
-     * but we don't have easy access to separate it here
+     * On illumos, ZFS ARC is the primary cache mechanism
      */
     stats->mem_total = physmem * page_size;
     stats->mem_free = freemem * page_size;
@@ -755,8 +766,8 @@ int retrieve_mem_stats(mem_stats_t *stats) {
     stats->mem_active = 0;
     stats->mem_inactive = 0;
     
-    /* ZFS ARC would be cache but needs separate kstat lookup */
-    stats->mem_cache = 0;
+    /* ZFS ARC cache size */
+    stats->mem_cache = arc_size;
     stats->mem_buffers = 0;
     
     /*
