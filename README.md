@@ -49,22 +49,25 @@ Swap:           6144         5257          886
 
 ## How It Works
 
-The program uses FreeBSD's `sysctl` interface to gather memory statistics:
+The program uses platform-specific APIs to gather memory statistics. On FreeBSD as an example:
 
 - **total**: Total physical memory (`vm.stats.vm.v_page_count`)
 - **used**: Calculated as `total - available`
 - **free**: Free memory (`vm.stats.vm.v_free_count`)
-- **shared**: Memory used by tmpfs (not easily available on FreeBSD, shown as 0)
-- **buff/cache**: Buffer and cache memory (`vfs.bufspace` + `vm.stats.vm.v_cache_count`)
+- **shared**: Memory used by tmpfs (not easily available on most platforms, shown as 0)
+- **buff/cache**: Buffer and cache memory
+  - On ZFS systems (FreeBSD, illumos): ZFS ARC cache size (can be several gigabytes)
+  - On other systems: Traditional buffer cache and page cache
 - **available**: Estimate of memory available for new applications (free + inactive + cache)
-- **swap**: Swap space information from `vm.swap_info`
+- **swap**: Swap space information (not displayed on Haiku OS)
 
 ## Platform-Specific Details
 
 ### FreeBSD
 - Uses `vm.stats.vm.v_*` individual sysctls for page counts
 - Swap info from `vm.swap_info` array
-- Buffer memory from `vfs.bufspace`
+- **Cache**: Prioritizes ZFS ARC (`kstat.zfs.misc.arcstats.size`) if available, falls back to `vfs.bufspace` + `vm.stats.vm.v_cache_count`
+- On ZFS systems, the ARC is the primary cache and can use significant memory (often gigabytes)
 - Available = free + inactive + cache
 
 ### NetBSD
@@ -76,8 +79,9 @@ The program uses FreeBSD's `sysctl` interface to gather memory statistics:
 ### OpenBSD
 - Uses `struct uvmexp` via `VM_UVMEXP`
 - Total memory from `hw.physmem64`
-- Has vnodepages/vtextpages for vnode and vtext cache
-- Buffer memory not easily accessible (shown as 0)
+- **Cache**: Calculated as `npages - free - active - inactive - wired` (includes buffer cache, per-CPU caches, and other cached pages)
+- While `uvmexp` has vnodepages/vtextpages fields, they're often unpopulated; the residual calculation provides accurate cache size
+- Available = free + inactive + cache
 
 ### DragonFly BSD
 - Uses `vm.stats.vm.v_*` individual sysctls (like FreeBSD)
@@ -99,8 +103,10 @@ The program uses FreeBSD's `sysctl` interface to gather memory statistics:
 - Memory from `unix:0:system_pages` kstat module
 - Swap from `swapctl()` system call
 - Page size from `sysconf(_SC_PAGESIZE)`
-- ZFS ARC cache not separately tracked (would need additional kstat)
-- Active/inactive pages not easily accessible
+- **Cache**: ZFS ARC size from `zfs:0:arcstats` kstat (ZFS's Adaptive Replacement Cache)
+- On ZFS systems (default for illumos/Solaris), the ARC is the primary cache mechanism
+- Active/inactive pages not easily accessible (shown as 0)
+- Requires linking with `-lkstat`
 
 ### Haiku OS
 - Uses BeOS-style `get_system_info()` API

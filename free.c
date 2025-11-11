@@ -69,7 +69,7 @@
 #include <OS.h>
 #endif
 
-#define VERSION "1.0.3"
+#define VERSION "1.0.4"
 
 #define KILOBYTE 1024
 #define MEGABYTE (1024 * 1024)
