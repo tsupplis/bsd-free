@@ -1,6 +1,6 @@
 # Free - BSD Memory Display Utility
 
-A loosely compatible cross-platform BSD implementation of the Linux memory `free` command that displays memory and swap usage.
+A clean room, loosely compatible cross-platform BSD implementation of the Linux memory `free` command that displays memory and swap usage.
 
 Supports: FreeBSD, NetBSD, OpenBSD, DragonFly BSD, and macOS (Darwin).
 
