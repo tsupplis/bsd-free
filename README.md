@@ -73,15 +73,16 @@ The program uses platform-specific APIs to gather memory statistics. On FreeBSD 
 ### NetBSD
 - Uses `struct uvmexp_sysctl` via `VM_UVMEXP2`
 - Has separate execpages/filepages for executable and file cache
-- Buffer memory from `vm.bufmem`
-- Available = free + inactive + cache
+- **Cache**: execpages + filepages (matches NetBSD's `/usr/pkg/bin/free` "buffers" column)
+- `vm.bufmem` is metadata overhead already included in filepages, not counted separately
+- Available = free + cache (cache is reclaimable)
 
 ### OpenBSD
 - Uses `struct uvmexp` via `VM_UVMEXP`
 - Total memory from `hw.physmem64`
 - **Cache**: Calculated as `npages - free - active - inactive - wired` (includes buffer cache, per-CPU caches, and other cached pages)
 - While `uvmexp` has vnodepages/vtextpages fields, they're often unpopulated; the residual calculation provides accurate cache size
-- Available = free + inactive + cache
+- Available = free + cache (cache is reclaimable)
 
 ### DragonFly BSD
 - Uses `vm.stats.vm.v_*` individual sysctls (like FreeBSD)
