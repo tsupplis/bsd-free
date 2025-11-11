@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: BSD-2-Clause
 
 CC=cc
-CFLAGS=-Wall -O2
+CFLAGS=-Wall -O2 -Wextra 
 TARGET=free
 
 all: $(TARGET)

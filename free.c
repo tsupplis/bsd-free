@@ -38,7 +38,7 @@
 #include <mach/mach_host.h>
 #endif
 
-#define VERSION "0.99"
+#define VERSION "1.0.0"
 
 #define KILOBYTE 1024
 #define MEGABYTE (1024 * 1024)

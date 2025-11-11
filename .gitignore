@@ -70,3 +70,5 @@ dkms.conf
 free
 run_*
 compile_*
+push
+remote-build
