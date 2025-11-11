@@ -69,7 +69,7 @@
 #include <OS.h>
 #endif
 
-#define VERSION "1.0.2"
+#define VERSION "1.0.3"
 
 #define KILOBYTE 1024
 #define MEGABYTE (1024 * 1024)
@@ -203,20 +203,35 @@ int retrieve_mem_stats(mem_stats_t *stats) {
     }
     stats->mem_wired = (uint64_t)page_count * page_size;
     
-    len = sizeof(page_count);
-    if (sysctlbyname("vm.stats.vm.v_cache_count", &page_count, &len, NULL, 0) == -1) {
-        /* Cache count might not be available on all FreeBSD versions */
-        stats->mem_cache = 0;
-    } else {
-        stats->mem_cache = (uint64_t)page_count * page_size;
-    }
-    
-    /* Try to get buffer memory */
-    len = sizeof(page_count);
-    if (sysctlbyname("vfs.bufspace", &page_count, &len, NULL, 0) == -1) {
+    /*
+     * Try to get ZFS ARC cache size first
+     * On FreeBSD systems with ZFS, the ARC is the primary cache
+     * and can use significant memory (often gigabytes)
+     * If ZFS is not available, fall back to v_cache_count
+     */
+    uint64_t arc_size = 0;
+    len = sizeof(arc_size);
+    if (sysctlbyname("kstat.zfs.misc.arcstats.size", &arc_size, &len, NULL, 0) == 0 && arc_size > 0) {
+        /* ZFS ARC is available, use it as the primary cache metric */
+        stats->mem_cache = arc_size;
+        /* On ZFS systems, bufspace is typically small and included in ARC */
         stats->mem_buffers = 0;
     } else {
-        stats->mem_buffers = page_count;
+        /* No ZFS, use traditional cache count */
+        len = sizeof(page_count);
+        if (sysctlbyname("vm.stats.vm.v_cache_count", &page_count, &len, NULL, 0) == -1) {
+            stats->mem_cache = 0;
+        } else {
+            stats->mem_cache = (uint64_t)page_count * page_size;
+        }
+        
+        /* Get buffer memory */
+        len = sizeof(page_count);
+        if (sysctlbyname("vfs.bufspace", &page_count, &len, NULL, 0) == -1) {
+            stats->mem_buffers = 0;
+        } else {
+            stats->mem_buffers = page_count;
+        }
     }
     
     /*
@@ -390,8 +405,7 @@ int retrieve_mem_stats(mem_stats_t *stats) {
      * - active: recently accessed, likely to be used again
      * - inactive: not recently used, candidates for reclamation
      * - wired: locked in memory, cannot be paged out
-     * - vnodepages: pages used by vnode page cache
-     * - vtextpages: pages used by vtext (executable) cache
+     * - cache: buffer cache and other cached pages
      */
     stats->mem_free = (uint64_t)uvmexp.free * page_size;
     stats->mem_active = (uint64_t)uvmexp.active * page_size;
@@ -399,14 +413,19 @@ int retrieve_mem_stats(mem_stats_t *stats) {
     stats->mem_wired = (uint64_t)uvmexp.wired * page_size;
     
     /*
-     * OpenBSD tracks vnode and vtext cache separately
-     * Unlike NetBSD which has execpages/filepages with more detail
+     * Calculate cache as remaining pages not accounted for
+     * OpenBSD's top uses: npages - free - active - inactive - wired
+     * This includes buffer cache, per-CPU caches, and other cached pages
+     * Note: vnodepages and vtextpages fields exist but are often 0
      */
-    stats->mem_cache = (uint64_t)(uvmexp.vnodepages + uvmexp.vtextpages) * page_size;
+    int64_t cache_pages = uvmexp.npages - uvmexp.free - uvmexp.active - 
+                          uvmexp.inactive - uvmexp.wired;
+    if (cache_pages < 0) cache_pages = 0;
+    stats->mem_cache = (uint64_t)cache_pages * page_size;
     
     /*
-     * Buffer memory not easily accessible on OpenBSD via sysctl
-     * Would need to parse kernel structures or use other methods
+     * Buffer memory not separately tracked on OpenBSD
+     * It's included in the cache calculation above
      */
     stats->mem_buffers = 0;
     
