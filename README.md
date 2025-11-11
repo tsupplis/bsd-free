@@ -1,4 +1,4 @@
-# free - BSD Memory Display Utility
+# Free - BSD Memory Display Utility
 
 A loosely compatible cross-platform BSD implementation of the Linux memory `free` command that displays memory and swap usage.
 
@@ -94,9 +94,25 @@ The program uses FreeBSD's `sysctl` interface to gather memory statistics:
 
 ## Differences from Linux
 
-- BSD memory management differs from Linux, so exact values may not match conceptually
-- The "shared" field is not easily available on most BSDs and is displayed as 0
-- The calculation of "available" memory uses BSD's inactive pages, which is similar but not identical to Linux's calculation
+This is a simplified implementation compared to Linux's `free` command:
+
+### Not Implemented
+- **shared** column - Always shown as 0 (shared memory not easily accessible on most BSDs)
+- **-w, --wide** - Wide mode (separate buffers and cache columns)
+- **-t, --total** - Display total line
+- **-s, --seconds** - Continuous updates
+- **-c, --count** - Number of updates
+- **-l, --lohi** - Show detailed low/high memory stats
+- **--si** - Use powers of 1000 instead of 1024
+- **--committed** - Show committed memory
+
+### Behavioral Differences
+- **Memory calculations** - BSD and Linux use different VM subsystems:
+  - Linux reads from `/proc/meminfo`
+  - BSDs use `sysctl` or Mach APIs
+  - "Available" memory calculation differs due to different page management
+- **Output format** - Matches Linux format but values reflect BSD memory management
+- **Shared memory** - Not tracked the same way across BSDs
 
 ## Development
 
@@ -131,27 +147,4 @@ The implementation was based on studying and referencing the following sources:
 
 ## License
 
-This is free and unencumbered software released into the public domain.
-
-Anyone is free to copy, modify, publish, use, compile, sell, or
-distribute this software, either in source code form or as a compiled
-binary, for any purpose, commercial or non-commercial, and by any
-means.
-
-In jurisdictions that recognize copyright laws, the author or authors
-of this software dedicate any and all copyright interest in the
-software to the public domain. We make this dedication for the benefit
-of the public at large and to the detriment of our heirs and
-successors. We intend this dedication to be an overt act of
-relinquishment in perpetuity of all present and future rights to this
-software under copyright law.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
-
-For more information, please refer to <http://unlicense.org/>
+BSD 2-Clause License

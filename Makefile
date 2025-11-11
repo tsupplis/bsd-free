@@ -1,7 +1,6 @@
 # free - BSD Memory Display Utility
 # 
-# This is free and unencumbered software released into the public domain.
-# For more information, please refer to <http://unlicense.org/>
+# SPDX-License-Identifier: BSD-2-Clause
 
 CC=cc
 CFLAGS=-Wall -O2

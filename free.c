@@ -2,15 +2,9 @@
  * free - BSD Memory Display Utility
  * 
  * A cross-platform BSD implementation of the Linux free command.
- * Supports: FreeBSD, NetBSD, OpenBSD, and DragonFly BSD.
+ * Supports: FreeBSD, NetBSD, OpenBSD, DragonFly BSD, and macOS.
  * 
- * This is free and unencumbered software released into the public domain.
- * 
- * Anyone is free to copy, modify, publish, use, compile, sell, or
- * distribute this software, either in source code form or as a compiled
- * binary, for any purpose, commercial or non-commercial, and by any means.
- * 
- * For more information, please refer to <http://unlicense.org/>
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <sys/types.h>
