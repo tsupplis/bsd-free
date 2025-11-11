@@ -40,9 +40,9 @@ Options:
 ## Example Output
 
 ```
-               total        used        free      shared  buff/cache   available
-Mem:         8388608     2145678     4567890           0     1675040     6242930
-Swap:        2097152           0     2097152
+               total         used         free   buff/cache    available
+Mem:           16384        12957           78         2294         3426
+Swap:           6144         5257          886
 ```
 
 ## How It Works
