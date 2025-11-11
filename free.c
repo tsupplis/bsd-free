@@ -69,7 +69,7 @@
 #include <OS.h>
 #endif
 
-#define VERSION "1.0.5"
+#define VERSION "1.0.6"
 
 #define KILOBYTE 1024
 #define MEGABYTE (1024 * 1024)
@@ -290,7 +290,6 @@ int retrieve_mem_stats(mem_stats_t *stats) {
     size_t len;
     int mib[2];
     uint64_t page_size;
-    uint64_t bufmem;
     
     /* Get UVM statistics using uvmexp_sysctl structure */
     mib[0] = CTL_VM;
@@ -324,16 +323,19 @@ int retrieve_mem_stats(mem_stats_t *stats) {
     stats->mem_inactive = (uint64_t)uvmexp.inactive * page_size;
     stats->mem_wired = (uint64_t)uvmexp.wired * page_size;
     
-    /* File cache = executable pages + file data pages */
+    /*
+     * File cache = executable pages + file data pages
+     * This matches NetBSD's /usr/pkg/bin/free which shows "buffers"
+     * as execpages + filepages
+     */
     stats->mem_cache = (uint64_t)(uvmexp.execpages + uvmexp.filepages) * page_size;
     
-    /* Get buffer memory (file system buffers) */
-    len = sizeof(bufmem);
-    if (sysctlbyname("vm.bufmem", &bufmem, &len, NULL, 0) == -1) {
-        stats->mem_buffers = 0;
-    } else {
-        stats->mem_buffers = (uint64_t)bufmem;
-    }
+    /*
+     * vm.bufmem is metadata overhead for the buffer cache
+     * It's already accounted for in filepages, so we don't add it separately
+     * to avoid double-counting
+     */
+    stats->mem_buffers = 0;
     
     /* Swap statistics directly available in uvmexp */
     stats->swap_total = (uint64_t)uvmexp.swpages * page_size;
@@ -961,8 +963,12 @@ int main(int argc, char *argv[]) {
     /* NetBSD/OpenBSD: simpler calculation like their free command */
     /* used = total - free (all non-free pages are considered "used") */
     used = stats.mem_total - stats.mem_free;
-    /* available = free + inactive + cache (reclaimable memory) */
-    available = stats.mem_free + stats.mem_inactive + stats.mem_cache;
+    /*
+     * available = free + cache (reclaimable memory)
+     * On NetBSD/OpenBSD, cache (file/exec pages) can be reclaimed when needed
+     * Don't include inactive here as it may overlap or not be immediately reclaimable
+     */
+    available = stats.mem_free + stats.mem_cache;
 #else
     /* FreeBSD/Linux: used = total - available */
     available = stats.mem_free + stats.mem_inactive + stats.mem_cache;
