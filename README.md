@@ -1,8 +1,9 @@
-# Free - BSD Memory Display Utility
+# Free - Cross-Platform (Mainly Focused on BSD) Memory Display Utility
 
-A clean room, loosely compatible cross-platform BSD implementation of the Linux memory `free` command that displays memory and swap usage.
+A clean room, loosely compatible cross-platform implementation of the Linux memory `free` command that displays memory and swap usage.
 
-Supports: FreeBSD, NetBSD, OpenBSD, DragonFly BSD, and macOS (Darwin).
+**BSD:** FreeBSD, NetBSD, OpenBSD, DragonFly BSD, macOS (Darwin).§
+**Other:** Illumos/Solaris, and Haiku OS.
 
 ## Reason for this development
 
@@ -92,6 +93,22 @@ The program uses FreeBSD's `sysctl` interface to gather memory statistics:
 - Cache = speculative + purgeable pages
 - Aggressively uses memory for caching/compression
 
+### illumos/Solaris
+- Uses kstat (kernel statistics) library for memory info
+- Memory from `unix:0:system_pages` kstat module
+- Swap from `swapctl()` system call
+- Page size from `sysconf(_SC_PAGESIZE)`
+- ZFS ARC cache not separately tracked (would need additional kstat)
+- Active/inactive pages not easily accessible
+
+### Haiku OS
+- Uses BeOS-style `get_system_info()` API
+- Returns `system_info` structure with memory stats
+- Much simpler API than Unix systems
+- Page size: B_PAGE_SIZE (typically 4KB)
+- No traditional swap file tracking (swap line not displayed)
+- Active/inactive/wired pages not exposed
+
 ## Differences from Linux
 
 This is a simplified implementation compared to Linux's `free` command:
@@ -122,28 +139,37 @@ This project was developed with assistance from GitHub Copilot (Claude 3.5 Sonne
 
 The implementation was based on studying and referencing the following sources:
 
-1. **BSD Manual Pages**:
+1. **Manual Pages and Documentation**:
    - FreeBSD: `sysctl(3)`, `sysctl(8)`, `vmstat(8)`
    - NetBSD: `sysctl(3)`, `sysctl(7)`, UVM documentation
    - OpenBSD: `sysctl(2)`, `sysctl(3)`, `vmstat(8)`
    - DragonFly BSD: `sysctl(3)`, `sysctl(8)`, `vmstat(8)`
+   - macOS: Mach kernel documentation, `vm_stat(1)`
+   - illumos/Solaris: `kstat(3KSTAT)`, `swapctl(2)`, system_pages kstat
+   - Haiku: BeBook, Haiku API documentation, `system_info`
 
-2. **BSD System Headers**:
+2. **System Headers**:
    - FreeBSD: `/usr/include/vm/vm_param.h`
    - NetBSD: `/usr/include/uvm/uvm_extern.h`
    - OpenBSD: `/usr/include/uvm/uvmexp.h`
    - DragonFly BSD: `/usr/include/sys/vmmeter.h`
+   - macOS: `<mach/vm_statistics.h>`, `<mach/mach_host.h>`
+   - illumos/Solaris: `<kstat.h>`, `<sys/swap.h>`
+   - Haiku: `<OS.h>`
 
 3. **Testing and Verification**:
-   - Compared output against native `vmstat -s` on all platforms
-   - Verified against existing `free` implementations where available
-   - Cross-referenced with `sysctl` direct queries
+   - Compared output against native `vmstat` on BSD systems
+   - Verified against `vm_stat` on macOS
+   - Cross-referenced with `sysctl` and `kstat` direct queries
+   - Tested against existing `free` implementations where available
 
 4. **Platform Documentation**:
    - FreeBSD Handbook and Developer's Handbook
    - NetBSD Guide and internals documentation
    - OpenBSD FAQ and man pages
    - DragonFly BSD documentation
+   - illumos Developer's Guide
+   - Haiku Book and API documentation
 
 ## License
 

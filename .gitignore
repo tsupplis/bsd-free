@@ -71,4 +71,4 @@ free
 run_*
 compile_*
 push
-remote-build
+remote_build
