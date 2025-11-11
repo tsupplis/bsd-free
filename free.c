@@ -69,7 +69,7 @@
 #include <OS.h>
 #endif
 
-#define VERSION "1.0.4"
+#define VERSION "1.0.5"
 
 #define KILOBYTE 1024
 #define MEGABYTE (1024 * 1024)
@@ -873,29 +873,36 @@ int retrieve_mem_stats(mem_stats_t *stats) {
     /*
      * Haiku system_info provides:
      * - max_pages: total physical memory pages
-     * - used_pages: total virtual pages (can exceed physical!)
-     * - cached_pages: pages used for cache
+     * - used_pages: pages used by applications (NOT including cache)
+     * - cached_pages: pages used for file cache (separate from used_pages)
      * - page_faults: not used for memory stats
      * - ignored_pages: system reserved pages
      * 
-     * For accurate physical memory stats, we calculate:
-     * total = max_pages, free = max_pages - physical usage
+     * Memory calculation:
+     * - total = max_pages (total physical RAM)
+     * - active (used by apps) = used_pages
+     * - cache = cached_pages (file cache, reclaimable)
+     * - free = max_pages - used_pages - cached_pages
+     * 
+     * Note: On Haiku, used_pages and cached_pages are mutually exclusive,
+     * unlike other systems where cache might be included in used.
      */
     stats->mem_total = (uint64_t)sysinfo.max_pages * B_PAGE_SIZE;
+    stats->mem_active = (uint64_t)sysinfo.used_pages * B_PAGE_SIZE;
     stats->mem_cache = (uint64_t)sysinfo.cached_pages * B_PAGE_SIZE;
     
     /* 
-     * Simple approach: assume cached + some used pages <= max_pages
-     * Free = total - cached (treating cache as "used" for now)
+     * Free memory = total - used - cache
+     * Both used_pages and cached_pages are separate from free memory
      */
-    if (sysinfo.cached_pages < sysinfo.max_pages) {
-        stats->mem_free = (uint64_t)(sysinfo.max_pages - sysinfo.cached_pages) * B_PAGE_SIZE;
+    uint64_t used_and_cached = sysinfo.used_pages + sysinfo.cached_pages;
+    if (used_and_cached < sysinfo.max_pages) {
+        stats->mem_free = (uint64_t)(sysinfo.max_pages - used_and_cached) * B_PAGE_SIZE;
     } else {
         stats->mem_free = 0;
     }
     
     /* Haiku doesn't expose these separately */
-    stats->mem_active = 0;
     stats->mem_inactive = 0;
     stats->mem_wired = 0;
     stats->mem_buffers = 0;
