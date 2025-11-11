@@ -53,3 +53,20 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# macOS files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+
+# Project specific
+free
+run_*
+compile_*
