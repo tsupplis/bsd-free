@@ -18,7 +18,7 @@ make
 ## Installation
 
 ```sh
-sudo make install
+doas make install
 ```
 
 ## Usage
