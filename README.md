@@ -5,7 +5,7 @@ A clean room, loosely compatible cross-platform implementation of the Linux memo
 ## Platforms Supported
 
 ![License](https://img.shields.io/badge/license-BSD-blue.svg)
-![C](https://img.shields.io/badge/ansi-c-blue.svg)
+![C](https://img.shields.io/badge/language-c-blue.svg)
 
 **BSD:** FreeBSD, NetBSD, OpenBSD, DragonFly BSD, macOS (Darwin).
 
