@@ -2,6 +2,11 @@
 
 A clean room, loosely compatible cross-platform implementation of the Linux memory `free` command that displays memory and swap usage.
 
+## Platforms Supported
+
+![C](https://img.shields.io/badge/c-%2300599C.svg?style=for-the-badge&logo=c&logoColor=white)
+![BSD](https://img.shields.io/badge/BSD-2--Clause-red?style=for-the-badge)
+
 **BSD:** FreeBSD, NetBSD, OpenBSD, DragonFly BSD, macOS (Darwin).
 
 **Other:** Illumos/Solaris, and Haiku OS.
