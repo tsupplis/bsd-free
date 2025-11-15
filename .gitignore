@@ -68,7 +68,4 @@ dkms.conf
 
 # Project specific
 free
-run_*
-compile_*
-push
-remote_build
+local/**
