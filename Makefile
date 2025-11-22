@@ -12,6 +12,7 @@ all: $(TARGET)
 # On SunOS/Illumos: make LDFLAGS=-lkstat
 $(TARGET): free.c
 	$(CC) $(CFLAGS) -o $(TARGET) free.c $(LDFLAGS)
+	strip $(TARGET)
 
 clean:
 	rm -f $(TARGET)
