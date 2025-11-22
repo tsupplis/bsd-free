@@ -1,0 +1,110 @@
+.TH FREE 1 "November 2025" "free" "User Commands"
+.SH NAME
+free \- display amount of free and used memory in the system
+.SH SYNOPSIS
+.B free
+[\fB\-b\fR]
+[\fB\-k\fR]
+[\fB\-m\fR]
+[\fB\-g\fR]
+[\fB\-h\fR]
+[\fB\-V\fR]
+[\fB\-\-bytes\fR]
+[\fB\-\-kilo\fR]
+[\fB\-\-mega\fR]
+[\fB\-\-giga\fR]
+[\fB\-\-human\fR]
+[\fB\-\-version\fR]
+[\fB\-\-help\fR]
+.SH DESCRIPTION
+.B free
+displays the total amount of free and used physical memory and swap space
+in the system, as well as the buffers and cache used by the kernel.
+.PP
+This is a cross-platform implementation supporting FreeBSD, NetBSD, OpenBSD,
+DragonFly BSD, macOS, illumos/Solaris, and Haiku OS.
+.SH OPTIONS
+.TP
+.BR \-b ", " \-\-bytes
+Display the amount of memory in bytes.
+.TP
+.BR \-k ", " \-\-kilo
+Display the amount of memory in kilobytes (default).
+.TP
+.BR \-m ", " \-\-mega
+Display the amount of memory in megabytes.
+.TP
+.BR \-g ", " \-\-giga
+Display the amount of memory in gigabytes.
+.TP
+.BR \-h ", " \-\-human
+Show human-readable output with appropriate unit suffixes (B, K, M, G, T).
+.TP
+.BR \-V ", " \-\-version
+Display version information and exit.
+.TP
+.BR \-\-help
+Display usage information and exit.
+.SH OUTPUT
+The output is displayed in a table format with the following columns:
+.TP
+.B total
+Total installed physical memory (excluding firmware-reserved memory).
+.TP
+.B used
+Memory currently in use (calculated as total - available).
+.TP
+.B free
+Unused memory (includes memory that can be immediately allocated).
+.TP
+.B shared
+Memory used by tmpfs filesystems (not available on all platforms, shown as 0).
+.TP
+.B buff/cache
+Memory used for buffers and cache. On ZFS systems (FreeBSD, illumos),
+this includes the ZFS ARC cache which can be several gigabytes.
+.TP
+.B available
+Estimated memory available for starting new applications without swapping.
+.PP
+The
+.B Mem:
+line shows physical memory statistics, and the
+.B Swap:
+line shows swap space statistics (not displayed on Haiku OS).
+.SH EXIT STATUS
+.TP
+.B 0
+Success
+.TP
+.B 1
+Error (e.g., unable to retrieve memory information)
+.SH EXAMPLES
+Display memory in megabytes:
+.PP
+.nf
+.RS
+free \-m
+.RE
+.fi
+.PP
+Display memory with human-readable units:
+.PP
+.nf
+.RS
+free \-h
+.RE
+.fi
+.SH SUPPORTED PLATFORMS
+FreeBSD, NetBSD, OpenBSD, DragonFly BSD, macOS, illumos/Solaris, Haiku OS
+.SH SEE ALSO
+.BR top (1),
+.BR vmstat (8),
+.BR sysctl (8)
+.SH AUTHORS
+This implementation was created as a cross-platform alternative to the Linux free command.
+.SH BUGS
+.IP \(bu 2
+The shared memory column is not supported on most platforms and shows 0.
+.IP \(bu 2
+Buffer memory information may not be available on all platforms.
